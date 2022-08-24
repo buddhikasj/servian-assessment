@@ -61,6 +61,14 @@ variable "alb_port" {
     default = 80
 }
 
+variable "web_container_image" {
+    type = string
+    default = "servian/techchallengeapp:latest"
+}
+
+#### generating a random password for the database
+#### we can push sensitive value via partial configuration or environmental variables also
 resource "random_password" "db_password" {
   length = 10
 }
+
