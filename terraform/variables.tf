@@ -60,3 +60,7 @@ variable "alb_port" {
     type = number
     default = 80
 }
+
+resource "random_password" "db_password" {
+  length = 10
+}
