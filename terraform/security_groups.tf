@@ -24,3 +24,23 @@ resource "aws_security_group" "lb_sg" {
         Name = "LoadBalancer_SecurityGroup"
     }
 }
+
+###### Create DB Security Group
+
+resource "aws_security_group" "db_sg" {
+  name        = "allow_postgress_from_web"
+  description = "Allow inbound DB request from web containers"
+  vpc_id      = aws_vpc.gtd-vpc.id
+
+  ingress {
+    description      = "DB connections from the Web containers"
+    from_port        = 5432
+    to_port          = 5432
+    protocol         = "tcp"
+    cidr_blocks      = var.web_subnets_cidr
+  }
+
+  tags = {
+        Name = "Database_SecurityGroup"
+    }
+}
