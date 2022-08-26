@@ -67,7 +67,7 @@ resource "aws_ecs_service" "gtd_web_ecs_service" {
   network_configuration {
     security_groups = [aws_security_group.gtd_web_ecs_sg.id]
     subnets         = aws_subnet.web_subnets.*.id
-    assign_public_ip = true
+    assign_public_ip = false
   }
 
   load_balancer {
@@ -112,8 +112,3 @@ resource "aws_cloudwatch_log_group" "ecs_log_group" {
     Name = "ecs-web-app"
   }
 }
-
-# resource "aws_cloudwatch_log_stream" "cb_log_stream" {
-#   name           = "cb-log-stream"
-#   log_group_name = aws_cloudwatch_log_group.cb_log_group.name
-# }
