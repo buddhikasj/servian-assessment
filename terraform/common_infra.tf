@@ -9,9 +9,9 @@ resource "aws_vpc" "gtd_vpc" {
 #### Create Public Subnet
 resource "aws_subnet" "public_subnets" {
   count                     = length(var.public_subnets_cidr)
-  vpc_id                    = aws_vpc.gtd-vpc.id
+  vpc_id                    = aws_vpc.gtd_vpc.id
   cidr_block                = element(var.public_subnets_cidr,count.index)
-  availability_zone         = element(var.azs,count.index)
+  availability_zone         = element(data.aws_availability_zones.available.names,count.index)
   map_public_ip_on_launch   = true
   tags                      = {
     Name = "Public_Subnet-${count.index+1}"
@@ -22,10 +22,10 @@ resource "aws_subnet" "public_subnets" {
 #### Create Web Subnet
 resource "aws_subnet" "web_subnets" {
   count                    = length(var.web_subnets_cidr)
-  vpc_id                   = aws_vpc.gtd-vpc.id
+  vpc_id                   = aws_vpc.gtd_vpc.id
   cidr_block               = element(var.web_subnets_cidr,count.index)
-  availability_zone        = element(var.azs,count.index)
-  map_public_ip_on_launch  = true
+  availability_zone        = element(data.aws_availability_zones.available.names,count.index)
+  map_public_ip_on_launch  = false
   ####### Ideally we can make this subnet a private one, but that would reqire us to set up Elastic IPs and NAT gateways per AZ to download the container image/ or wecan copy the image to ECR and setup a VPC enpoint. 
   ####### Currently keeping the web subnet public to minimise depenencies
   tags                     = {
@@ -37,9 +37,9 @@ resource "aws_subnet" "web_subnets" {
 #### Create DB Subnet
 resource "aws_subnet" "db_subnets" {
   count                    = length(var.db_subnets_cidr)
-  vpc_id                   = aws_vpc.gtd-vpc.id
+  vpc_id                   = aws_vpc.gtd_vpc.id
   cidr_block               = element(var.db_subnets_cidr,count.index)
-  availability_zone        = element(var.azs,count.index)
+  availability_zone        = element(data.aws_availability_zones.available.names,count.index)
   map_public_ip_on_launch  = false
   tags                     = {
     Name = "DB_Subnet-${count.index+1}"
@@ -48,7 +48,7 @@ resource "aws_subnet" "db_subnets" {
 
 #### Create Internet Gateway
 resource "aws_internet_gateway" "gtd_igw" {
-  vpc_id = aws_vpc.gtd-vpc.id
+  vpc_id = aws_vpc.gtd_vpc.id
   tags = {
     Name = "gtd_igw"
   }
@@ -56,26 +56,60 @@ resource "aws_internet_gateway" "gtd_igw" {
 
 ##### Create Public Route Table
 resource "aws_route_table" "public_rt" {
-  vpc_id = aws_vpc.gtd_vpc
-  route = [ {
+  vpc_id = aws_vpc.gtd_vpc.id
+  route  {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.gtd_igw.id
-
-  } ]
+  }
   tags = {
     Name = "Public_RouteTable"
   }
 }
 
-##### Create Route table associations
+##### Create Public Route table associations
 resource "aws_route_table_association" "public_subnet_associate" {
   count = length(var.public_subnets_cidr)
-  subnet_id = element(aws_subnet.public_subnets.id,count.indix)
+  subnet_id = element(aws_subnet.public_subnets.*.id,count.index)
   route_table_id = aws_route_table.public_rt.id
 }
 
+
+##### Creat NAT GATEWAY Public IPs
+resource "aws_eip" "nat_gw_eips" {
+  count = length(var.public_subnets_cidr)
+  vpc = true
+}
+##### Create NAT Gateway
+resource "aws_nat_gateway" "gtd_vpc_nat_gw" {
+  count         = length(var.public_subnets_cidr)
+  allocation_id = element(aws_eip.nat_gw_eips.*.id, count.index)
+  subnet_id     = element(aws_subnet.public_subnets.*.id, count.index)
+  depends_on    = [aws_internet_gateway.gtd_igw]
+}
+ 
+
+##### Create Internet Route Table
+resource "aws_route_table" "internet_rt" {
+  count  = length(var.public_subnets_cidr)
+  vpc_id = aws_vpc.gtd_vpc.id
+  route  {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = element(aws_nat_gateway.gtd_vpc_nat_gw.*.id,count.index)
+  }
+  tags = {
+    Name = "Internet_RouteTable-${count.index+1}"
+  }
+}
+
+##### Create Internet Route table association
 resource "aws_route_table_association" "web_subnet_associate" {
   count = length(var.web_subnets_cidr)
-  subnet_id = element(aws_subnet.web_subnets.id,count.indix)
-  route_table_id = aws_route_table.public_rt.id
+  subnet_id = element(aws_subnet.web_subnets.*.id,count.index)
+  route_table_id = element(aws_route_table.internet_rt.*.id,count.index)
+}
+
+resource "aws_route_table_association" "db_subnet_associate" {
+  count = length(var.db_subnets_cidr)
+  subnet_id = element(aws_subnet.db_subnets.*.id,count.index)
+  route_table_id = element(aws_route_table.internet_rt.*.id,count.index)
 }
