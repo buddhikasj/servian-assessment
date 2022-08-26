@@ -1,10 +1,12 @@
+###### Create the container definition for servian web app with environmental variables and container command
+###### !!!!!!!! DB Password is passed as a value here, hence it will be visible in task definition in AWS , best practice is to pass it via AWS secrets manager or parameter store
 locals {
     container_definition = [
         {
             name      = "gtd-web-app"
             image     = "${var.web_container_image}"
-            cpu       = 1024
-            memory    = 2048
+            cpu       = 512
+            memory    = 1024
             essential = true
             portMappings = [
                 {
@@ -26,6 +28,10 @@ locals {
                 {
                     "name": "VTT_LISTENHOST"
                     "value":"0.0.0.0"            
+                },
+                {
+                    "name": "VTT_LISTENPORT"
+                    "value":"${var.web_frontend_port}"            
                 }
             ]
             command     = ["serve"]
@@ -42,12 +48,13 @@ locals {
     ]
 }
 
+##### Create ECS task definition for web app with above container definition
 resource "aws_ecs_task_definition" "gtd_web_ecs_td" {
   family                   = "servian-gtd-app"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = 1024
-  memory                   = 2048
+  cpu                      = 512
+  memory                   = 1024
   execution_role_arn       = "${aws_iam_role.ecs_task_execution_role.arn}"
   container_definitions = jsonencode(local.container_definition)
 }
