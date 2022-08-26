@@ -16,6 +16,8 @@ locals {
                 {
                     "name": "VTT_DBPASSWORD"
                     "value":"${random_password.db_password.result}" 
+                    #### This will show the db password in the ECS task definition, we can use AWS secrets manager or parameter store to the passwrod and refer it as a secret in container definition 
+                    #### To keep the dependencies to a minimum I am just passing the value here  as an environmental variable but it is critically important for a production app
                 },
                 {
                     "name": "VTT_DBHOST"
