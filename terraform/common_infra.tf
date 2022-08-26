@@ -26,8 +26,6 @@ resource "aws_subnet" "web_subnets" {
   cidr_block               = element(var.web_subnets_cidr,count.index)
   availability_zone        = element(data.aws_availability_zones.available.names,count.index)
   map_public_ip_on_launch  = false
-  ####### Ideally we can make this subnet a private one, but that would reqire us to set up Elastic IPs and NAT gateways per AZ to download the container image/ or wecan copy the image to ECR and setup a VPC enpoint. 
-  ####### Currently keeping the web subnet public to minimise depenencies
   tags                     = {
     Name = "Web_Subnet-${count.index+1}"
   }
