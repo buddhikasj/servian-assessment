@@ -81,5 +81,6 @@ variable "app_count" {
 #### we can push sensitive value via partial configuration or environmental variables also
 resource "random_password" "db_password" {
   length = 10
+  override_special  = "!#$%^&*()-_=+[]{}<>:?"
 }
 
