@@ -1,11 +1,13 @@
 variable "aws_profile" {
   type = string
   default = "servian-test-account"
+  description   = "AWS CLI profile on the local device which will be used deploy resource and execute AWS commands required for deployment"
 }
+
 variable "region" {
   type          = string
   description   = "AWS region the instances will be deployed in"
-  default       = "ap-southeast-1"
+  default       = "us-east-1"
 }
 
 data "aws_availability_zones" "available" {
@@ -20,7 +22,7 @@ variable "default_tags" {
      Project     = "Servian-Assessment"
  
 }
-  description = "Default Tags for Auto Scaling Group"
+  description = "Default Tags for AWS resources"
   type        = map(string)
 }
 
@@ -56,11 +58,13 @@ variable "health_check_path" {
 variable "web_frontend_port" {
     type = number
     default = 3000
+    description = "port container is listening on and ECS service"
 }
 
 variable "alb_port" {
     type = number
     default = 80
+    description = "ALB listener port"
 }
 
 variable "web_container_image" {
@@ -68,13 +72,14 @@ variable "web_container_image" {
     default = "servian/techchallengeapp:latest"
 }
 
-#### generating a random password for the database
+variable "app_count" {
+  type = number
+  default = 2
+}
+
+#### generating a random password for the database, this is by default a sensitive value in TF
 #### we can push sensitive value via partial configuration or environmental variables also
 resource "random_password" "db_password" {
   length = 10
 }
 
-variable "app_count" {
-  type = number
-  default = 2
-}

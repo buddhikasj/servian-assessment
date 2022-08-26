@@ -1,4 +1,5 @@
-region = "us-east-1"
+#### override any 
+region = "ap-southeast-1"
 default_tags = {
 
      Environment = "Production"

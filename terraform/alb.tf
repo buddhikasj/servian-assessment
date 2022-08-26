@@ -1,3 +1,5 @@
+# alb.tf
+#---------
 ##### Create ALB Instance
 resource "aws_lb" "gtd-alb" {
   name               = "gtd-alb"

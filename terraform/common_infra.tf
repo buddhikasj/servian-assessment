@@ -99,7 +99,7 @@ resource "aws_route_table" "internet_rt" {
   }
 }
 
-##### Create Internet Route table association
+##### Create Internet Route table association to web and DB subnets
 resource "aws_route_table_association" "web_subnet_associate" {
   count = length(var.web_subnets_cidr)
   subnet_id = element(aws_subnet.web_subnets.*.id,count.index)

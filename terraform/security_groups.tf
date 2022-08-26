@@ -1,3 +1,4 @@
+##### Create Security Group for ALB
 resource "aws_security_group" "lb_sg" {
   name        = "allow_http"
   description = "Allow HTTP inbound traffic"
@@ -45,7 +46,7 @@ resource "aws_security_group" "db_sg" {
     }
 }
 
-##### Create Task Security Group
+##### Create ECS Task Security Group
 resource "aws_security_group" "gtd_web_ecs_sg" {
   name        = "gtd-web-security-group"
   vpc_id      = aws_vpc.gtd_vpc.id
