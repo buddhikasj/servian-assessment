@@ -1,3 +1,4 @@
+##### Create ALB Instance
 resource "aws_lb" "gtd-alb" {
   name               = "gtd-alb"
   internal           = false
@@ -5,7 +6,7 @@ resource "aws_lb" "gtd-alb" {
   security_groups    = [aws_security_group.lb_sg.id]
   subnets            = [for subnet in aws_subnet.public_subnets : subnet.id]
 
-  enable_deletion_protection = true
+
 
   tags = {
         Name = "gtd-alb"
@@ -15,14 +16,14 @@ resource "aws_lb" "gtd-alb" {
 
 ##### Create ALB Target Group
 resource "aws_alb_target_group" "gtd_ecs_tg" {
-  name     = "gtd-ecs-alb-target"
-  port     = var.web_frontend_port
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.gtd_vpc.id
+  name          = "gtd-ecs-alb-target"
+  port          = var.web_frontend_port
+  protocol      = "HTTP"
+  vpc_id        = aws_vpc.gtd_vpc.id
+  target_type   = "ip"
   stickiness {
     type = "lb_cookie"
   }
-  # Alter the destination of the health check to be the login page.
   health_check {
     path = var.health_check_path
     port = var.web_frontend_port
@@ -35,6 +36,9 @@ resource "aws_alb_target_group" "gtd_ecs_tg" {
 ##### I am sticking with HTTP to make it less complex
 
 resource "aws_alb_listener" "listener_http" {
+  depends_on = [
+    aws_alb_target_group.gtd_ecs_tg
+  ]
   load_balancer_arn = aws_lb.gtd-alb.arn
   port              = var.alb_port
   protocol          = "HTTP"
