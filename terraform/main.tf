@@ -19,10 +19,10 @@ terraform {
 
 provider "aws" {
   region                  = var.region
-  shared_credentials_file = "~/.aws/credentials"
-  profile                 = "servian-test-account"
+  profile                 = var.aws_profile
   default_tags {
     tags = var.default_tags
   }
 }
 
+data "aws_caller_identity" "current" {}
