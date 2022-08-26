@@ -1,13 +1,15 @@
+variable "aws_profile" {
+  type = string
+  default = "servian-test-account"
+}
 variable "region" {
   type          = string
   description   = "AWS region the instances will be deployed in"
-  default       = "us-east-1"
+  default       = "ap-southeast-1"
 }
 
-variable "azs" {
-	type = list
-	default = ["us-east-1a", "us-east-1b"]
-
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 variable "default_tags" {
@@ -41,7 +43,7 @@ variable "web_subnets_cidr" {
 
 variable "db_subnets_cidr" {
 	type = list
-	default = ["10.20.16.0/24", "10.20.17.0/24"]
+	default = ["10.10.16.0/24", "10.10.17.0/24"]
 }
 
 ##### APP specific variables
@@ -72,3 +74,7 @@ resource "random_password" "db_password" {
   length = 10
 }
 
+variable "app_count" {
+  type = number
+  default = 2
+}

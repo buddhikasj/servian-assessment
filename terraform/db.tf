@@ -3,7 +3,7 @@ resource "aws_db_subnet_group" "gtd_db_subnetgroup" {
       aws_subnet.db_subnets
     ]
   name       = "gtd_db_subnetgroup"
-  subnet_ids = [aws_subnet.db_subnets.*.id]
+  subnet_ids = "${aws_subnet.db_subnets.*.id}"
 
   tags = {
     Name = "gtd_db_subnetgroup"
@@ -14,14 +14,17 @@ resource "aws_db_instance" "gtd_posgres_db" {
     depends_on = [
       aws_db_subnet_group.gtd_db_subnetgroup
     ]
+  identifier             = "gts-postgres-db"
   db_name                = "app"
   instance_class         = "db.t2.micro"
   allocated_storage      = 5
   engine                 = "postgres"
-  engine_version         = "14.5"
+  engine_version         = "12.11"
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   username               = "postgres"
   password               = random_password.db_password.result
+  db_subnet_group_name   = aws_db_subnet_group.gtd_db_subnetgroup.id
+  skip_final_snapshot    = true
   ### we can enable MultiAZ to incrase the availability of the database
   ### database encryption can be enabled to secure the data at rest
 
@@ -53,10 +56,12 @@ locals {
                 hostPort      = 3000
                 }
             ]
-            environmental_variables=[
+            environment=[
                 {
                     "name": "VTT_DBPASSWORD"
-                    "value":"${random_password.db_password.result}" 
+                    "value":"${random_password.db_password.result}"
+                    #### This will show the db password in the ECS task definition, we can use AWS secrets manager or parameter store to the passwrod and refer it as a secret in container definition 
+                    #### To keep the dependencies to a minimum I am just passing the value here  as an environmental variable but it is critically important for a production app 
                 },
                 {
                     "name": "VTT_DBHOST"
@@ -73,6 +78,9 @@ resource "null_resource" "db_init" {
       aws_db_instance.gtd_posgres_db,aws_ecs_task_definition.gtd_postgres_db_init_td
     ]
     provisioner "local-exec" {
-        command = "aws ecs run-task --task-definition ${aws_ecs_task_definition.gtd_postgres_db_init_td.arn} --region ${var.region} --network-configuration {awsvpcConfiguration= {subnets=[${aws_subnet.db_subnets.*.id}]}}"    
+        # command = "aws ecs run-task --task-definition ${aws_ecs_task_definition.gtd_postgres_db_init_td.arn} --launch-type=\"FARGATE\" --network-configuration \"awsvpcConfiguration\"= {\"subnets\":[\"${aws_subnet.db_subnets.0.id}\",\"${aws_subnet.db_subnets.1.id}\"], assignPublicIp='DISABLED'} --region ${var.region}  --profile ${var.aws_profile}"    
+        command = "aws ecs run-task --cluster ${aws_ecs_cluster.gtd_web_cluster.arn} --task-definition ${aws_ecs_task_definition.gtd_postgres_db_init_td.arn} --launch-type=\"FARGATE\" --network-configuration \"awsvpcConfiguration={subnets=[${aws_subnet.web_subnets.0.id},${aws_subnet.web_subnets.1.id}], assignPublicIp='DISABLED'}\"  --region ${var.region}  --profile ${var.aws_profile}"    
+        
     }
+    triggers = { run="2"}
 }
