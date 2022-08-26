@@ -26,5 +26,7 @@ provider "aws" {
   }
 }
 
-#### Obtain details about the account being used to execute changes in AWS
+#### Obtain details about the account and region being used to execute changes in AWS
 data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}

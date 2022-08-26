@@ -51,5 +51,5 @@ resource "aws_appautoscaling_policy" "ecs_target_cpu" {
     }
     target_value = 80
   }
-  depends_on = [aws_appautoscaling_target.ecs_target]
+  depends_on = [aws_appautoscaling_target.ecs_gtd_web_as_target]
 }
