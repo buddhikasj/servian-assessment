@@ -31,7 +31,7 @@ locals {
                 },
                 {
                     "name": "VTT_LISTENPORT"
-                    "value":"${var.web_frontend_port}"            
+                    "value":"${tostring(var.web_frontend_port)}"            
                 }
             ]
             command     = ["serve"]
