@@ -41,6 +41,7 @@ With code updates to master branch would require a merge request to be approved,
 ## Application related CI/CD
 
 Simillar to above we can integrate to application source code repo and use jenkinsfile and Dockerfile to define the pipeline and the container build instruction to build the image and update the container image run update-service in ECS.
+
 Some old testing I have done with jenkinsfile and dockerfile can be found here - https://github.com/buddhikasj/webgoat
 It basically tries to integrate an IAST + RASP tool "Contrast Security" with OWASP webgoat package while scanning the conainer image with Aqua container security tool.
 
