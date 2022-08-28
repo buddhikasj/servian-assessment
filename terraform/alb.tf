@@ -52,3 +52,6 @@ resource "aws_alb_listener" "listener_http" {
 }
 
 
+##### As additional security controls for the web page we can introduce a WAF. either AWS WAF or a thrid party WAF solution
+##### If the environment uses multiple AWS accounts to host applications or is multicloud
+##### more suitable option would be to use a thridparty cloud WAF which provides integrated caching and DDOS protection along with the WAF capabilitis
