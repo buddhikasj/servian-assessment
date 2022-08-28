@@ -3,6 +3,7 @@
 
 #### Create IAM role for autoscaling
 resource "aws_iam_role" "ecs-autoscale-role" {
+
   name = "ecs-gtd-web-autoscale-role"
 
   assume_role_policy = <<EOF
@@ -23,14 +24,16 @@ EOF
 
 ##### Attached AWS managed autoscale permissions to IAM role
 resource "aws_iam_role_policy_attachment" "ecs-autoscale" {
+
   role = aws_iam_role.ecs-autoscale-role.id
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole"
 }
 
 #### Create AWS autoscale target
 resource "aws_appautoscaling_target" "ecs_gtd_web_as_target" {
-  max_capacity       = 4
-  min_capacity       = 2
+
+  max_capacity       = var.max_capacity
+  min_capacity       = var.min_capacity
   resource_id        = "service/${aws_ecs_cluster.gtd_web_cluster.name}/${aws_ecs_service.gtd_web_ecs_service.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
@@ -39,6 +42,7 @@ resource "aws_appautoscaling_target" "ecs_gtd_web_as_target" {
 
 #### Define autoscaling policy
 resource "aws_appautoscaling_policy" "ecs_target_cpu" {
+    count = var.enable_autoscaling ? 1:0
   name               = "application-scaling-policy-cpu"
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.ecs_gtd_web_as_target.resource_id

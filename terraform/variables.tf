@@ -84,3 +84,20 @@ resource "random_password" "db_password" {
   override_special  = "!#$%^&*()-_=+[]{}<>:?"
 }
 
+
+
+###### Auto scaling related variables 
+variable "enable_autoscaling" {
+    type = bool
+    default = true
+}
+
+variable "max_capacity" {
+    type = number
+    default = 4
+}
+
+variable "min_capacity" {
+  type = number
+  default = 2
+}
